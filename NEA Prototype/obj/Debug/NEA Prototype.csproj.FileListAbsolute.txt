@@ -1,0 +1,19 @@
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\x86\sqlite3.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\x64\sqlite3.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe.config
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.pdb
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.EF6.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.Linq.dll
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.xml
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.xml
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.xml
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.AssemblyReference.cache
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.SuggestedBindingRedirects.cache
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CoreCompileInputs.cache
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CopyComplete
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.exe
+\\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.pdb
