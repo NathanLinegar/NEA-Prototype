@@ -17,3 +17,22 @@
 \\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CopyComplete
 \\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.exe
 \\RHEA\HOME\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.pdb
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\x86\sqlite3.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\x64\sqlite3.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe.config
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.pdb
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.EF6.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.Linq.dll
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.xml
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.xml
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.AssemblyReference.cache
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.SuggestedBindingRedirects.cache
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CoreCompileInputs.cache
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CopyComplete
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.exe
+C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.pdb
