@@ -13,22 +13,71 @@ namespace NEA_Prototype
     {
         static void Main(string[] args)
         {
-            int UserInput;
-            MainMenu();
-            UserInput = int.Parse(Console.ReadLine());
+            List<Employee> ListOfEmployees = new List<Employee>();
+            ListOfEmployees = GetListOfEmployees(ListOfEmployees);
+            LoginMenu();
+            AdminMainMenu();
+            int choice = int.Parse(Console.ReadLine());
+            switch(choice)
+            {
+                case 1:
+                    ViewRota();
+                    break;
+                case 2:
+                    ViewDataBase();
+                    break;
+                case 3:
+                    //AddNewEmployee();
+                    break;
+                case 4:
+                    //RemoveEmployee();
+                    break;
 
-            ViewDataBase();
+            }
             Console.ReadKey();
+        }
+        static List<Employee> GetListOfEmployees(List<Employee>ListOfEmployees)
+        {
+            try
+            {
+                string query = "SELECT * FROM Employees";
+                using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db"))
+                {
+                    conn.Open();
+
+                    SQLiteCommand cmd = new SQLiteCommand(query, conn);
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+
+                        }
+                    }
+                }
+            }
+        
+            catch 
+            { 
+            
+            
+            }
+
+            return ListOfEmployees ; 
         }
         static void LoginMenu()
         {
             //lmao i'll get this done sometime
         }
-        static void MainMenu()
+        static void AdminMainMenu()
         {
-            Console.WriteLine("1) View Entries in the database");
-            Console.WriteLine("2) Add an entry to the database");
-            Console.WriteLine("3) Remove an entry from the database");
+            Console.WriteLine("1) View your rota");
+            Console.WriteLine("2) View entries in the database");
+            Console.WriteLine("3) Add an entry to the database");
+            Console.WriteLine("4) Remove an entry from the database");
+        }
+        static void ViewRota()
+        {
+
         }
         static void ViewDataBaseChoices()
         {
