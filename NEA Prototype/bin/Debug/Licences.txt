@@ -1,0 +1,2 @@
+Liquor,bar
+Mathematics Teaching,college
