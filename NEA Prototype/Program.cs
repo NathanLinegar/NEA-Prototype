@@ -1,19 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.Design;
 using System.Data.SQLite;
-using System.Data.SqlClient;
-using System.Data;
-using System.Security.AccessControl;
-using System.Security.Policy;
-using System.Threading;
-using System.Linq.Expressions;
-using System.Globalization;
 using System.IO;
-using System.Diagnostics.Eventing.Reader;
-using System.ComponentModel;
+using System.Linq;
+using System.Threading;
 // for Prototype ive got to get the view database done, remove and add for employee table
 namespace NEA_Prototype
 {
@@ -22,30 +13,30 @@ namespace NEA_Prototype
         static void Main(string[] args)
         {
             List<Employee> ListOfEmployees = new List<Employee>();
-            List<string> Licences = new List<string>();
+            List<string> QualificationsList = new List<string>();
             List<string> Roles = new List<string>();
             int userIndex = -1;
             string userInput = "";
-            GetListOfEmployees(ref ListOfEmployees); //Need to update to include Liscenses. May make it another subroutine
-            GetLicencesAndRoles(ref Licences, ref Roles);
+            GetEmployees(ref ListOfEmployees); //Need to update to include Liscenses. May make it another subroutine
+            GetQualificationsAndRoles(ref QualificationsList, ref Roles);
             if (LoginMenu(ListOfEmployees, ref userIndex))
             {
                 if (ListOfEmployees[userIndex].password == "proton1")
                 {
                     ChangePassword(ref ListOfEmployees, userIndex);
                 }
-                //Need an if to display a notification if there is a trade request pending.
+                //if (traderequestpending == true) {Console.WriteLine("employeeName wants to trade xxx shift");}
                 while (userInput != "x")
                 {
                     Console.Clear();
                     if (ListOfEmployees[userIndex].AccessType == "Owner" || ListOfEmployees[userIndex].AccessType == "Manager" || ListOfEmployees[userIndex].AccessType == "Admin")
                     {
-                        AdminChoices(ListOfEmployees, userIndex, ref userInput, Licences);
+                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList);
 
                     }
                     else
                     {
-                        EmployeeChoices(ListOfEmployees, userIndex, ref userInput, Licences);
+                        EmployeeChoices(ListOfEmployees, userIndex, ref userInput);
                     }
                 }
             }
@@ -58,7 +49,7 @@ namespace NEA_Prototype
             Thread.Sleep(500);
 
         }
-        static void GetListOfEmployees(ref List<Employee> ListOfEmployees)
+        static void GetEmployees(ref List<Employee> ListOfEmployees)
         {
             try
             {
@@ -68,6 +59,7 @@ namespace NEA_Prototype
                 string DOB, leaveStart, leaveEnd;
                 double wage, accExtraShift;
                 string query = "SELECT * FROM Employees";
+                List<string> qualificationList = new List<string>();
                 using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db;Version=3;"))
                 {
                     conn.Open();
@@ -91,7 +83,6 @@ namespace NEA_Prototype
                             hoursworked = rdr.GetInt32(rdr.GetOrdinal("HoursWorked"));
                             leaveStart = rdr.GetString(rdr.GetOrdinal("LeaveStart"));
                             leaveEnd = rdr.GetString(rdr.GetOrdinal("LeaveEnd"));
-                            emp = new Employee(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
                             if (contractType == "Full Time")
                             {
                                 emp = new FullTime(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
@@ -104,12 +95,15 @@ namespace NEA_Prototype
                             {
                                 emp = new ZeroHour(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
                             }
+                            else
+                            {
+                                emp = new Employee(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
+                            }
                             ListOfEmployees.Add(emp);
                         }
                         conn.Close();
+                        GetEmployeeQualifications(ref ListOfEmployees);
                     }
-
-
                 }
             }
 
@@ -118,25 +112,51 @@ namespace NEA_Prototype
                 Console.WriteLine(ex.Message);
 
             }
-        }  //gets the employee data off of the database specifically the Employee table
-        static void GetLicencesAndRoles(ref List<string> Licences, ref List<string> Roles)
+        }  //gets the employee data off of the database from the Employee table
+        static void GetQualificationsAndRoles(ref List<string> Qualifications, ref List<string> Roles)
         {
-            string licenceName = "";
-            string roleName = "";
-            using (StreamReader rdr = new StreamReader("Licences.txt"))
+            string QualificationName;
+            string roleName;
+            using (StreamReader rdr = new StreamReader("Qualifications.txt"))
             {
+
                 string line;
                 while ((line = rdr.ReadLine()) != null)
                 {
-                   licenceName = line.Split(',')[0];
-                    Licences.Add(licenceName);
+                    QualificationName = line.Split(',')[0];
+                    Qualifications.Add(QualificationName);
                     roleName = line.Split(',')[1];
                     Roles.Add(roleName);
                 }
-
+                rdr.Close();
             }
-        }
-        
+        } //Gets the valid roles (those in a text files) and the respective roles those Qualifications allow the employee to do
+        static void GetEmployeeQualifications(ref List<Employee> EmployeeList)
+        {
+            int employeeID = 0;
+            string qualification = "";
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db;Version=3;"))
+            {
+                conn.Open();
+                SQLiteCommand cmd = new SQLiteCommand(conn);
+                cmd.CommandText = "SELECT Qualifications.QualificationName, Employees.EmployeeID FROM Qualifications INNER JOIN Employees ON Qualifications.EmployeeID = Employees.EmployeeID";
+                using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        employeeID = rdr.GetInt32(rdr.GetOrdinal("EmployeeID"));
+                        qualification = rdr.GetString(rdr.GetOrdinal("QualificationName"));
+                        for (int i = 0; i < EmployeeList.Count; i++)
+                        {
+                            if (EmployeeList[i].EmployeeID == employeeID)
+                            {
+                                EmployeeList[i].Qualifications.Add(qualification);
+                            }
+                        }
+                    }
+                }
+            }
+        } //gets the qualifications of each employee and adds it to the employee class list.
         static bool LoginMenu(List<Employee> ListOfEmployees, ref int UserIndex)
         {
             string inputtedEmailAddress, inputtedPassword;
@@ -168,21 +188,23 @@ namespace NEA_Prototype
         static void DisplayAdminChoices(List<Employee> ListOfEmployees, int userIndex)
         {
             Console.WriteLine("1) View your rota");
-            Console.WriteLine("2) Request/Accept trade shift requests");
-            Console.WriteLine("3) Request time off");
-            Console.WriteLine("4) View entries in the database");
-            Console.WriteLine("5) Add an entry/ entries to the database");
-            Console.WriteLine("6) Remove an entry/ entries from the database");
+            Console.WriteLine("2) View full rota");
+            Console.WriteLine("3) Request/Accept trade shift requests");
+            Console.WriteLine("4) Request time off");
+            Console.WriteLine("5) View employees in the database");
+            Console.WriteLine("6) Add an employee to the database");
+            Console.WriteLine("7) Remove an employee from the database");
+            Console.WriteLine("8) Edit an entry from the database");
+            Console.WriteLine("9) Run automatic rota system maker");
+            Console.WriteLine("10) Edit Licenses file");
             if (ListOfEmployees[userIndex].AccessType.ToLower() == "owner" || ListOfEmployees[userIndex].AccessType.ToLower() == "manager")
             {
-                Console.WriteLine("7) Accept/deny time off requests");
+                Console.WriteLine("11) Accept/deny time off requests");
             }
-            Console.WriteLine("8) Run automatic rota system maker"); //Come up with a better name later
-            Console.WriteLine("9) Edit Licenses file");
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) exit program");
-        }
-        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput,  List<string> Licences) //where accounts with admin privalleges or above can access all choices avaiable to them
+        } //Come up with better names later on
+        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList) //where accounts with admin privalleges or above can access all choices avaiable to them
         {
             DisplayAdminChoices(ListOfEmployees, userIndex);
             userInput = Console.ReadLine().ToLower().Trim();
@@ -192,28 +214,37 @@ namespace NEA_Prototype
                     ViewRota();
                     break;
                 case "2":
-                    //TradeShift();
+                    ViewFullRota();
                     break;
                 case "3":
-                    //RequestTimeOff();
+                    ShiftTrade();
                     break;
                 case "4":
-                    ViewEmployees(ListOfEmployees);
+                    RequestTimeOff(ListOfEmployees, userIndex);
                     break;
                 case "5":
-                    AddEmployee(ListOfEmployees, userIndex, Licences);
+                    ViewEmployees(ListOfEmployees,QualificationsList);
                     break;
                 case "6":
-                    //RemoveEmployee();
-                    break;
+                    AddEmployee(ref ListOfEmployees, userIndex, QualificationsList);
+                    break; 
                 case "7":
-                    //DealWithTimeOffRequests();
+                    RemoveEmployee(ref ListOfEmployees);
                     break;
                 case "8":
-                    //Rota system maker;
+                    //EditTable();
+                    break;
+                case "9":
+                    RotaSystemMaker();
+                    break;
+                case "10":
+                    //Edit Qualifications file
+                    break;
+                case "11":
+                   DealWithTimeOffRequests();
                     break;
                 case "0":
-                    //Settings();
+                    Settings(ListOfEmployees, userIndex);
                     break;
                 case "x":
                     break;
@@ -232,8 +263,9 @@ namespace NEA_Prototype
 
 
         }
-        static void EmployeeChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> Licences) // Brings up choices accessible to all employees
+        static void EmployeeChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput) // Brings up choices accessible to all employees
         {
+            DisplayEmployeeChoices();
             userInput = Console.ReadLine().ToLower().Trim();
             switch (userInput)
             {
@@ -241,13 +273,13 @@ namespace NEA_Prototype
                     ViewRota();
                     break;
                 case "2":
-                    //ShiftTrade()
+                    ShiftTrade();
                     break;
                 case "3":
-                    //Request time off
+                    RequestTimeOff(ListOfEmployees,userIndex);
                     break;
                 case "0":
-                    //settings()
+                    Settings(ListOfEmployees, userIndex);
                     break;
                 case "x":
                     break;
@@ -256,18 +288,36 @@ namespace NEA_Prototype
                     break;
             }
         }
-        static void NonQueryUpdateEmployeeTable(List<Employee> ListOfEmployees, int userIndex, string updateQuery,string cellToChange, string change)
+        static void NonQueryUpdateEmployeeTable(List<Employee> ListOfEmployees, int userIndex, string updateQuery, string cellToChange, string change)
         {
             try
             {
+                double booleanChange = 0.0;
+                if (change == "1.0")
+                {
+                    booleanChange = 1.0;
+                }
+                if (change == "0.0")
+                {
+                    booleanChange = 0.0;
+                }
                 using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
                 {
                     conn.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(updateQuery, conn))
                     {
-                        cmd.Parameters.AddWithValue(cellToChange, change);
-                        cmd.Parameters.AddWithValue("@employeeID", ListOfEmployees[userIndex].EmployeeID);
-                        cmd.ExecuteNonQuery();
+                        if (change == "1.0" || change == "0.0")
+                        {
+                            cmd.Parameters.AddWithValue(cellToChange, booleanChange);
+                            cmd.Parameters.AddWithValue("@employeeID", ListOfEmployees[userIndex].EmployeeID);
+                            cmd.ExecuteNonQuery();
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddWithValue(cellToChange, change);
+                            cmd.Parameters.AddWithValue("@employeeID", ListOfEmployees[userIndex].EmployeeID);
+                            cmd.ExecuteNonQuery();
+                        }
                         conn.Close();
                     }
                 }
@@ -285,12 +335,12 @@ namespace NEA_Prototype
             Console.WriteLine("1) All employees");
             Console.WriteLine("2) Employees with a certain name (fore/sur)");
             Console.WriteLine("3) Employees with IDs within a specified range");
-            Console.WriteLine("4) Employees with a certain liscence");
+            Console.WriteLine("4) Employees with a certain licence");
             Console.WriteLine("5) Employees above a certain age");
             Console.WriteLine("6) All employees not on leave");
             Console.WriteLine("x) Go back");
         }
-        static void ViewEmployees(List<Employee> ListOfEmployees)
+        static void ViewEmployees(List<Employee> ListOfEmployees,List<string> QualifcationList)
         {
             string choice = "";
             while (choice != "x")
@@ -303,6 +353,10 @@ namespace NEA_Prototype
                     for (int i = 0; i < ListOfEmployees.Count; i++)
                     {
                         Console.WriteLine($"ID: {ListOfEmployees[i].EmployeeID}, Forename: {ListOfEmployees[i].forename}, Surname: {ListOfEmployees[i].surname}, Email: {ListOfEmployees[i].emailAdd}, phoneNum: {ListOfEmployees[i].phoneNum}, Contract Type: {ListOfEmployees[i].ContractType},\nDays they can work: {ListOfEmployees[i].daysString}, Accepts Extra Shifts: {ListOfEmployees[i].acceptExtraShifts}, Wage: {ListOfEmployees[i].Wage}, DOB: {ListOfEmployees[i].DOB}, On Leave: {ListOfEmployees[i].onLeave}");
+                        for (int j = 0; j < ListOfEmployees[i].Qualifications.Count(); j++)
+                        {
+                            Console.Write("Qualifications: " + ListOfEmployees[i].Qualifications[j]);
+                        }
                         Console.WriteLine("\n\n");
                     }
                     Console.WriteLine("Press any key to continue");
@@ -310,14 +364,18 @@ namespace NEA_Prototype
                 }
                 if (choice == "2")
                 {
-                    string nameToFind = "";
+                    string nameToFind;
                     Console.WriteLine("Input a fore/sur name");
                     nameToFind = Console.ReadLine();
-                    for (int i = 0;i < ListOfEmployees.Count;i++)
+                    for (int i = 0; i < ListOfEmployees.Count; i++)
                     {
                         if (ListOfEmployees[i].forename.ToLower() == nameToFind.ToLower() || ListOfEmployees[i].surname.ToLower() == nameToFind.ToLower())
                         {
                             Console.WriteLine($"ID: {ListOfEmployees[i].EmployeeID}, Forename: {ListOfEmployees[i].forename}, Surname: {ListOfEmployees[i].surname}, Email: {ListOfEmployees[i].emailAdd}, phoneNum: {ListOfEmployees[i].phoneNum}, Contract Type: {ListOfEmployees[i].ContractType},\nDays they can work: {ListOfEmployees[i].daysString}, Accepts Extra Shifts: {ListOfEmployees[i].acceptExtraShifts}, Wage: {ListOfEmployees[i].Wage}, DOB: {ListOfEmployees[i].DOB}, On Leave: {ListOfEmployees[i].onLeave}");
+                            for (int j = 0; j < ListOfEmployees[i].Qualifications.Count(); j++)
+                            {
+                                Console.Write("Qualifications: " + ListOfEmployees[i].Qualifications[j]);
+                            }
                             Console.WriteLine("\n\n");
                         }
                     }
@@ -332,7 +390,7 @@ namespace NEA_Prototype
                     if (smallestID < 0)
                     {
                         smallestID = 0;
-                    }   
+                    }
                     Console.WriteLine("Input the largest ID in the range");
                     largestID = int.Parse(Console.ReadLine());
                     for (int i = 0; i < ListOfEmployees.Count(); i++)
@@ -340,6 +398,10 @@ namespace NEA_Prototype
                         if (ListOfEmployees[i].EmployeeID >= smallestID && ListOfEmployees[i].EmployeeID <= largestID)
                         {
                             Console.WriteLine($"ID: {ListOfEmployees[i].EmployeeID}, Forename: {ListOfEmployees[i].forename}, Surname: {ListOfEmployees[i].surname}, Email: {ListOfEmployees[i].emailAdd}, phoneNum: {ListOfEmployees[i].phoneNum}, Contract Type: {ListOfEmployees[i].ContractType},\nDays they can work: {ListOfEmployees[i].daysString}, Accepts Extra Shifts: {ListOfEmployees[i].acceptExtraShifts}, Wage: {ListOfEmployees[i].Wage}, DOB: {ListOfEmployees[i].DOB}, On Leave: {ListOfEmployees[i].onLeave}");
+                            for (int j = 0; j < ListOfEmployees[i].Qualifications.Count(); j++)
+                            {
+                                Console.Write("Qualifications: " + ListOfEmployees[i].Qualifications[j]);
+                            }
                             Console.WriteLine("\n\n");
                         }
                     }
@@ -348,12 +410,32 @@ namespace NEA_Prototype
                 }
                 if (choice == "4")
                 {
-                    Console.WriteLine("Not done yet");
-                }
-                if (choice == "5") 
+                    string qualificationToView;
+                    Console.WriteLine("Qualifications to choose from:");
+                    for (int i = 0; i < QualifcationList.Count(); i++)
+                    {
+                        Console.WriteLine(QualifcationList[i]);
+                    }
+                    qualificationToView = Console.ReadLine();
+                    for (int j =0; j < ListOfEmployees.Count(); j++)
+                    {
+                        for (int k = 0; k < ListOfEmployees[j].Qualifications.Count(); k++)
+                        {
+                            if (ListOfEmployees[j].Qualifications[j] == qualificationToView)
+                            {
+                                Console.WriteLine($"ID: {ListOfEmployees[j].EmployeeID}, Forename: {ListOfEmployees[j].forename}, Surname: {ListOfEmployees[j].surname}, Email: {ListOfEmployees[j].emailAdd}, phoneNum: {ListOfEmployees[j].phoneNum}, Contract Type: {ListOfEmployees[j].ContractType},\nDays they can work: {ListOfEmployees[j].daysString}, Accepts Extra Shifts: {ListOfEmployees[j].acceptExtraShifts}, Wage: {ListOfEmployees[j].Wage}, DOB: {ListOfEmployees[j].DOB}, On Leave: {ListOfEmployees[j].onLeave}");
+                                Console.Write("Qualifications: " + ListOfEmployees[j].Qualifications[j]);
+                                Console.WriteLine("\n\n");
+                            }
+                        }
+                    }
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
+                } 
+                if (choice == "5")
                 {
                     bool validInput = false;
-                    string dateString = "";
+                    string dateString;
                     DateTime inputDate;
                     while (validInput == false)
                     {
@@ -368,6 +450,10 @@ namespace NEA_Prototype
                                 if (ListOfEmployees[i].DOB <= inputDate)
                                 {
                                     Console.WriteLine($"ID: {ListOfEmployees[i].EmployeeID}, Forename: {ListOfEmployees[i].forename}, Surname: {ListOfEmployees[i].surname}, Email: {ListOfEmployees[i].emailAdd}, phoneNum: {ListOfEmployees[i].phoneNum}, Contract Type: {ListOfEmployees[i].ContractType},\nDays they can work: {ListOfEmployees[i].daysString}, Accepts Extra Shifts: {ListOfEmployees[i].acceptExtraShifts}, Wage: {ListOfEmployees[i].Wage}, DOB: {ListOfEmployees[i].DOB}, On Leave: {ListOfEmployees[i].onLeave}");
+                                    for (int j = 0; j < ListOfEmployees[i].Qualifications.Count(); j++)
+                                    {
+                                        Console.Write("Qualifications: " + ListOfEmployees[i].Qualifications[j]);
+                                    }
                                     Console.WriteLine("\n\n");
                                 }
                             }
@@ -382,11 +468,15 @@ namespace NEA_Prototype
                 }
                 if (choice == "6")
                 {
-                    for (int i = 0; i < ListOfEmployees.Count;i++)
+                    for (int i = 0; i < ListOfEmployees.Count; i++)
                     {
                         if (ListOfEmployees[i].onLeave == false)
                         {
                             Console.WriteLine($"ID: {ListOfEmployees[i].EmployeeID}, Forename: {ListOfEmployees[i].forename}, Surname: {ListOfEmployees[i].surname}, Email: {ListOfEmployees[i].emailAdd}, phoneNum: {ListOfEmployees[i].phoneNum}, Contract Type: {ListOfEmployees[i].ContractType},\nDays they can work: {ListOfEmployees[i].daysString}, Accepts Extra Shifts: {ListOfEmployees[i].acceptExtraShifts}, Wage: {ListOfEmployees[i].Wage}, DOB: {ListOfEmployees[i].DOB}, On Leave: {ListOfEmployees[i].onLeave}");
+                            for (int j = 0; j < ListOfEmployees[i].Qualifications.Count(); j++)
+                            {
+                                Console.Write("Qualifications: " + ListOfEmployees[i].Qualifications[j]);
+                            }
                             Console.WriteLine("\n\n");
                         }
                     }
@@ -395,19 +485,19 @@ namespace NEA_Prototype
                 }
             }
         }
-        static void AddEmployee(List<Employee> EmployeeList,int userIndex, List<string> Licences)
+        static void AddEmployee(ref List<Employee> EmployeeList, int userIndex, List<string> QualificationsList)
         {
-            int empID, hoursworked = 0, licenceFromFileLine = 0;
-            string forename, surname, emailAdd, password, accountType, phonenum, daysWorkable, contractType, lisenceInput = "", allDataCorrect;
+            int empID, hoursworked = 0;
+            string forename, surname, emailAdd, password, accountType, phonenum, daysWorkable, contractType, licenceInput = "", allDataCorrect;
             string DOB, leaveStart = "01-01-0001", leaveEnd = "01-01-001";
             double wage, accExtraShift;
             bool correctdata = false, onLeave = false;
             string addQuery = "INSERT INTO Employees (EmployeeID, Forename, Surname, Email, Password, AccessType, PhoneNum, DOB, AcceptExtraShift, ContractType, Wage, DaysCanWork, HoursWorked, OnLeave, LeaveStart, LeaveEnd) VALUES (@ID, @Fore, @Sur, @Email, @Password, @Access, @PhoneNum, @DOB, @AccExtraShift, @ContType, @Wage, @Days, @HoursWorked, @OnLeave, @LeaveS, @LeaveE)";
-            string addQuery2 = "INSERT INTO Licences (LicenceID EmployeeID, LiscenseName) VALUES (@LicenceID,@EmpID, @Liscence)";
-            
+            string addQuery2 = "INSERT INTO Qualifications (QualificationID, EmployeeID, QualificationName) VALUES (@QualificationID,@EmpID, @Qualification)";
+
             empID = EmployeeList.Count;
             password = "proton1";
-            List<string> AddLicences = new List<string>();
+            List<string> AddQualifications = new List<string>();
             do
             {
                 Console.Clear();
@@ -440,21 +530,27 @@ namespace NEA_Prototype
                 phonenum = Console.ReadLine().Trim();
                 Console.WriteLine("Input days they can work as a string e.g. Monday,Tuesday,Wednesday");
                 daysWorkable = Console.ReadLine().Trim();
-                Console.WriteLine("Input contract type (Full Time, Part Time, Zero Hour");
+                Console.WriteLine("Input contract type (Full Time, Part Time, Zero Hour)");
                 contractType = Console.ReadLine();
                 Console.WriteLine("Input DOB (dd-MM-yyyy)");
                 DOB = Console.ReadLine().Trim();
-                Console.WriteLine("Input wage (xx.xx)");
+                Console.WriteLine("Input wage (00.00)");
                 wage = double.Parse(Console.ReadLine().Trim());
                 Console.WriteLine("Input if they will accept extra shifts or not (0.0 for no) (1.0 for yes)");
                 accExtraShift = double.Parse(Console.ReadLine().Trim());
-                while (lisenceInput != "x")
+                while (licenceInput != "x")
                 {
-                    Console.WriteLine("Input a liscence the employee has (x to leave loop)");
-                    lisenceInput = Console.ReadLine().Trim();
-                    if (lisenceInput.ToLower() != "x")
+                    Console.WriteLine("Input a licence the employee has (x to leave loop)");
+                    Console.WriteLine();
+                    Console.WriteLine("Current licences in program:");
+                    for (int i = 0; i < QualificationsList.Count; i++)
                     {
-                        AddLicences.Add(lisenceInput);
+                        Console.WriteLine(QualificationsList[i]);
+                    }
+                    licenceInput = Console.ReadLine().Trim();
+                    if (licenceInput.ToLower() != "x")
+                    {
+                        AddQualifications.Add(licenceInput);
                     }
                 }
                 Console.WriteLine("\nIs all the data correct (y/n)");
@@ -462,9 +558,8 @@ namespace NEA_Prototype
                 if (allDataCorrect.ToLower() == "y")
                 {
                     correctdata = true;
-                } 
+                }
             } while (correctdata == false);
-            
             try
             {
                 using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
@@ -473,8 +568,8 @@ namespace NEA_Prototype
                     using (SQLiteCommand cmd = new SQLiteCommand(addQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@ID", empID);
-                        cmd.Parameters.AddWithValue("@Fore", forename );
-                        cmd.Parameters.AddWithValue("@Sur", surname );
+                        cmd.Parameters.AddWithValue("@Fore", forename);
+                        cmd.Parameters.AddWithValue("@Sur", surname);
                         cmd.Parameters.AddWithValue("@Email", emailAdd);
                         cmd.Parameters.AddWithValue("@Password", password);
                         cmd.Parameters.AddWithValue("@Access", accountType);
@@ -489,37 +584,29 @@ namespace NEA_Prototype
                         cmd.Parameters.AddWithValue("@LeaveS", leaveStart);
                         cmd.Parameters.AddWithValue("@LeaveE", leaveEnd);
                         cmd.ExecuteNonQuery();
-                        conn.Close();
-                    }
-                    conn.Open();
-                    using (SQLiteCommand cmd2 = new SQLiteCommand(addQuery2, conn))
-                    {
-                        for (int i = 0; i < AddLicences.Count; i++)
-                        {
-                            for (int  j = 0; j < Licences.Count; j++)
-                            {
-                                if (AddLicences[i] == Licences[j])
-                                {
-                                    licenceFromFileLine = i;
-                                    break;
-                                }
-                                else
-                                {
-                                    licenceFromFileLine = Licences.Count();
-                                    AddToLicenceFile(AddLicences);
-                                }                             
-                            }
-                            cmd2.Parameters.AddWithValue("@LicenceID", Licences[licenceFromFileLine]);
-                            cmd2.Parameters.AddWithValue("@EmpID", empID);
-                            cmd2.Parameters.AddWithValue("@Liscence", AddLicences[0]);
-                        }
-                        
                     }
                     conn.Close();
+                    Employee emp = new Employee(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
+                    if (contractType == "Full Time")
+                    {
+                        emp = new FullTime(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
+                    }
+                    else if (contractType == "Part Time")
+                    {
+                        emp = new PartTime(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
+                    }
+                    else if (contractType == "Zero Hour")
+                    {
+                        emp = new ZeroHour(empID, forename, surname, emailAdd, password, phonenum, contractType, daysWorkable, accountType, accExtraShift, wage, DOB, leaveStart, leaveEnd);
+                    }
+                    EmployeeList.Add(emp);
+                    for (int i = 0; i < AddQualifications.Count; i++)
+                    {
+                        InsertIntoQualificationsTable(AddQualifications[i],addQuery2,QualificationsList,empID);
+                    }
                     Console.WriteLine("Employee Successfully added");
                     Thread.Sleep(1000);
                 }
-
             }
             catch (Exception ex)
             {
@@ -527,24 +614,143 @@ namespace NEA_Prototype
                 Console.WriteLine("Failed to add employee");
                 Thread.Sleep(1000);
             }
+            Console.ReadKey();
 
+        } //Done
+        static void RemoveEmployee(ref List<Employee> EmployeeList)
+        {
+            Console.WriteLine("Input the email of the employee you wish to remove");
+            string removeCondition = Console.ReadLine().Trim();
+            int empID = -1;
+            for (int i = 0;i < EmployeeList.Count;i++)
+            {
+                if (removeCondition.ToLower() == EmployeeList[i].emailAdd.ToLower())
+                {
+                    empID = i;
+                }
+            }
+           
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
+            {
+                conn.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(conn))
+                {
+                    cmd.CommandText = "DELETE FROM EmployeeShifts WHERE EmployeeID = @EmployeeID;";
+                    cmd.Parameters.AddWithValue("@EmployeeID", empID);
+                    cmd.ExecuteNonQuery();
+                }
+                using (SQLiteCommand cmd = new SQLiteCommand(conn))
+                {
+                    cmd.CommandText = "DELETE FROM Qualifications WHERE EmployeeID = @EmployeeID;";
+                    cmd.Parameters.AddWithValue("@EmployeeID", empID);
+                    cmd.ExecuteNonQuery();
+                }
+                using (SQLiteCommand cmd = new SQLiteCommand(conn))
+                {
+                    cmd.CommandText = "DELETE FROM Employees WHERE EmployeeID = @EmployeeID;";
+                    cmd.Parameters.AddWithValue("@EmployeeID", empID);
+                    cmd.ExecuteNonQuery();
+                }
+                conn.Close();
+            }
+        } //Completed
+        static void InsertIntoQualificationsTable(string qualification, string addQuery,List<string> QualificationsList, int empID) //Done
+        {
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
+            {
+                conn.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(addQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@QualificationID", QualificationsList.IndexOf(qualification));
+                    cmd.Parameters.AddWithValue("@EmpID", empID);
+                    cmd.Parameters.AddWithValue("@Qualificaion", qualification);
+                    cmd.ExecuteNonQuery();               
+                }
+                conn.Close();
+            }
         }
-        static void ViewRota()
+        static void AddToLicenceFile(string LicenceToAdd, string addQuery, string conn)
+        {
+            
+        } //Do other things first
+        static void ShiftTrade() 
         {
 
-        }
-        static void AddToLicenceFile(List<string> LicencesToAdd)
+        } //Needs shifts to be made  //PersonWantingTrade, Onetheywanttotradewith, ShiftTheyHave,ShiftTheyWant
+        static void Settings(List<Employee> ListOfEmployees, int userIndex)
         {
-
-        }
-        static void ShiftTrade()
-        {
-
-        }
-        static void Settings()
-        {
-
-        }
+            string userChoice = "";
+            while (userChoice.ToLower().Trim() != "x")
+            {
+                ViewSettingChoices();
+                userChoice = Console.ReadLine().ToLower().Trim();
+                string updateQuery;
+                switch (userChoice)
+                {
+                    case "1":
+                        Console.WriteLine("Input what your forname should be changed to");
+                        string newForname = Console.ReadLine().Trim();
+                        updateQuery = $"UPDATE Employees SET Forename = @forename WHERE EmployeeID = @employeeID";
+                        NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@forename", newForname);
+                        ListOfEmployees[userIndex].forename = newForname;
+                        break;
+                    case "2":
+                        Console.WriteLine("Input what your surname should be changed to");
+                        string newSurname = Console.ReadLine().Trim();
+                        updateQuery = $"UPDATE Employees SET Surname = @surname WHERE EmployeeID = @employeeID";
+                        NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@surname", newSurname);
+                        ListOfEmployees[userIndex].surname = newSurname;
+                        break;
+                    case "3":
+                        Console.WriteLine("Input what your email should be changed to");
+                        string newEmailAdd = Console.ReadLine().Trim();
+                        updateQuery = $"UPDATE Employees SET Email = @email WHERE EmployeeID = @employeeID";
+                        NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@email", newEmailAdd);
+                        ListOfEmployees[userIndex].emailAdd = newEmailAdd;
+                        break;
+                    case "4":
+                        ChangePassword(ref ListOfEmployees, userIndex);
+                        break;
+                    case "5":
+                        Console.WriteLine("Input what your phone number should be changed to");
+                        string newPhoneNum = Console.ReadLine().Trim();
+                        updateQuery = $"UPDATE Employees SET PhoneNum = @phonenum WHERE EmployeeID = @employeeID";
+                        NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@phonenum", newPhoneNum);
+                        ListOfEmployees[userIndex].phoneNum = newPhoneNum;
+                        break;
+                    case "6":
+                        try
+                        {
+                            string accExShifts;
+                            updateQuery = $"UPDATE Employees SET AcceptExtraShift = @accExShifts WHERE EmployeeID = @employeeID";
+                            Console.WriteLine("Change whether you accept extra shifts or not (y/n)");
+                            char userInput = char.Parse(Console.ReadLine().ToLower().Trim());
+                            if (userInput == 'y')
+                            {
+                                accExShifts = "1.0";
+                            }
+                            else
+                            {
+                                accExShifts = "0.0";
+                            }
+                            NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@accExShifts", accExShifts);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Invalid input setting to no as default");
+                            string accExShifts = "0.0";
+                            updateQuery = $"UPDATE Employees SET AcceptExtraShift = @accExShifts WHERE EmployeeID = @employeeID";
+                            NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@accExShifts", accExShifts);
+                        }
+                        break;
+                    case "x":
+                        break;
+                    default:
+                        Console.WriteLine("Invalid input");
+                        break;
+                }
+            }
+        } //completed
         static void ViewSettingChoices()
         {
             Console.WriteLine("1) Change forename");
@@ -552,8 +758,9 @@ namespace NEA_Prototype
             Console.WriteLine("3) Change email address");
             Console.WriteLine("4) Change Password");
             Console.WriteLine("5) Change Phone Number");
-            Console.WriteLine(""); //need to add more of these.
-        }
+            Console.WriteLine("6) Change acceptance of extra shifts");
+            Console.WriteLine("x) Go back to main menu");
+        } //completed
         static void ChangePassword(ref List<Employee> ListOfEmployees, int userIndex)
         {
             string newPasswordInput = "";
@@ -563,10 +770,14 @@ namespace NEA_Prototype
             {
                 Console.WriteLine("Default password detected.\nChange of password required");
             }
-            while (oldPassword != currentPassword && currentPassword == "proton1" || currentPassword != "proton1" && newPasswordInput != "x")
+            while (oldPassword != currentPassword && currentPassword == "proton1" || currentPassword != "proton1" && newPasswordInput.ToLower().Trim() != "x")
             {
-                Console.WriteLine("Input new password (input x to go back");
+                Console.WriteLine("Input new password (input x to go cancel)");
                 newPasswordInput = Console.ReadLine();
+                if (newPasswordInput.ToLower().Trim() == "x" && currentPassword == "proton1")
+                {
+                    Console.WriteLine("Please change the password");
+                }
                 if (currentPassword == "proton1")
                 {
                     oldPassword = currentPassword;
@@ -578,15 +789,48 @@ namespace NEA_Prototype
                 }
             }
             string updateQuery = $"UPDATE Employees SET password = @newpassword WHERE EmployeeID = @employeeID";
+            NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery, "@newpassword", newPasswordInput);
             ListOfEmployees[userIndex].password = newPasswordInput;
-            NonQueryUpdateEmployeeTable(ListOfEmployees, userIndex, updateQuery,"@newpassword", newPasswordInput);
-
-
+        } //completed
+        static void RequestTimeOff(List<Employee> ListOfEmployees, int userIndex) //File stores data as EmployeeID,LeaveStart,LeaveEnd,ReasonForLeave
+        {
+            Console.Clear();
+            if (ListOfEmployees[userIndex].HasRequestedTimeOff() == false)
+            {
+                Console.WriteLine("Input the reason for leave");
+                string reason = Console.ReadLine().Trim();
+                Console.WriteLine("Input when you want the leave to start (dd-MM-yyyy");
+                string leaveStart = Console.ReadLine().Trim();
+                Console.WriteLine("Input when you want the leave to end (dd-MM-yyyy");
+                string leaveEnd = Console.ReadLine().Trim();
+                using (StreamWriter sw = File.AppendText("TimeOffRequests.txt"))
+                { 
+                 sw.WriteLine(userIndex + "," + leaveStart + "," + leaveEnd + "," + reason);
+                }
+                ListOfEmployees[userIndex].requestedTimeOff = true;
+            }
+            else
+            {
+                Console.WriteLine("You've already requested time off");
+                Thread.Sleep(1000);
+            }
         }
-        static void RequestTimeOff()
+        static void DealWithTimeOffRequests()
         {
 
         }
+        static void RotaSystemMaker()
+        {
+
+        }
+        static void ViewRota()
+        {
+
+        } //needs everything to do with getting data from the database done first
+        static void ViewFullRota()
+        {
+
+        } //same of one above but everything of importance to the rota system (no passwords displayed)
     }
 
 }

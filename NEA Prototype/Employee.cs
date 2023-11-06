@@ -14,9 +14,10 @@ namespace NEA_Prototype
         public int EmployeeID, extraShiftsWorked, contractedHours, maxhours, hoursWorked;
         public string forename, surname, emailAdd, password, phoneNum, AccessType, ContractType, daysString;
         public DateTime DOB, LeaveStart, LeaveEnd;
-        public bool acceptExtraShifts, onLeave;
+        public bool acceptExtraShifts, onLeave, requestedTimeOff;
         public double Wage, shiftPriority;
         public string[] DaysCanWork = new string[7];
+        public List<string> Qualifications = new List<string>();
 
         public Employee(int ID, string fore, string sur, string email, string pass, string phone, string contType, string days, string access, double AccextraShift, double pay, string DoB, string leaveStart, string leaveEnd)
         {
@@ -31,7 +32,7 @@ namespace NEA_Prototype
             ContractType = contType;
             daysString = days;
             maxhours = 40;
-
+            requestedTimeOff = false;
             GetDateTimeFromString(DoB, leaveStart, leaveEnd);
             GetDaysWorkable(days);
             AcceptsExtraShifts(AccextraShift);
@@ -52,7 +53,6 @@ namespace NEA_Prototype
                     DaysCanWork[nextIndex] = day;
                     nextIndex++;
                 }
-
             }
         }
         private void GetDateTimeFromString(string dob, string leaveS, string leaveE)
@@ -92,6 +92,10 @@ namespace NEA_Prototype
         public virtual void Priority()
         {
             shiftPriority = 100 - (100 * hoursWorked / contractedHours);
+        }
+        public bool HasRequestedTimeOff()
+        {
+            return requestedTimeOff;
         }
     }
     public class FullTime : Employee
