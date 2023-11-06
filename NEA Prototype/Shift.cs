@@ -8,9 +8,26 @@ namespace NEA_Prototype
 {
     public class Shift
     {
-        int shiftID;
-        DateTime shiftDay;
-        DateTime shiftStartTime;
-        DateTime shiftEndTime;
+       public int shiftID;
+       public DateTime shiftDay;
+       public DateTime shiftStartTime;
+       public DateTime shiftEndTime;
+        public Shift() 
+        { 
+        
+        }
+    }
+
+    public class EmployeeShift
+    {
+        public int employeeID;
+        public int shiftID;
+        public string role;
+        public EmployeeShift(int empId, int shiftId, string shiftRole) 
+        { 
+            employeeID = empId;
+            shiftID = shiftId;
+            role = shiftRole;
+        }
     }
 }

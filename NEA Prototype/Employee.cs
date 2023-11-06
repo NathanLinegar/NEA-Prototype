@@ -15,7 +15,8 @@ namespace NEA_Prototype
         public string forename, surname, emailAdd, password, phoneNum, AccessType, ContractType, daysString;
         public DateTime DOB, LeaveStart, LeaveEnd;
         public bool acceptExtraShifts, onLeave, requestedTimeOff;
-        public double Wage, shiftPriority;
+        public double Wage;
+        public double shiftPriority;
         public string[] DaysCanWork = new string[7];
         public List<string> Qualifications = new List<string>();
 
@@ -37,6 +38,7 @@ namespace NEA_Prototype
             GetDaysWorkable(days);
             AcceptsExtraShifts(AccextraShift);
             IsOnleave();
+            ContractedHours();
         }
         private void GetDaysWorkable(string days)
         {
@@ -87,11 +89,22 @@ namespace NEA_Prototype
         }
         public virtual void ContractedHours()
         {
-            contractedHours = 0;
+            contractedHours = 35;
         }
-        public virtual void Priority()
+        public virtual void Priority(string day)
         {
-            shiftPriority = 100 - (100 * hoursWorked / contractedHours);
+            if ((DaysCanWork.Count() == 1 )&& (DaysCanWork.Contains(day) == true))
+            {
+                shiftPriority = 1.0;
+            }
+            else if (hoursWorked >= contractedHours)
+            {
+                shiftPriority = 0.0;
+            }
+            else
+            {
+                shiftPriority = 1.0- (hoursWorked / contractedHours);
+            }
         }
         public bool HasRequestedTimeOff()
         {
@@ -105,7 +118,10 @@ namespace NEA_Prototype
         {
             contractedHours = 35;
         }
-
+        public override void Priority(string day)
+        {
+            base.Priority(day);
+        }
     }
 
     public class PartTime : Employee
@@ -115,6 +131,10 @@ namespace NEA_Prototype
         {
             contractedHours = 16;
         }
+        public override void Priority(string day)
+        {
+            base.Priority(day);
+        }
     }
     public class ZeroHour : Employee
     {
@@ -123,7 +143,7 @@ namespace NEA_Prototype
         {
             contractedHours = 0;
         }
-        public override void Priority()
+        public override void Priority(string day)
         {
             shiftPriority = 0;
         }

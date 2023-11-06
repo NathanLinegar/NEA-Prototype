@@ -20,6 +20,8 @@ namespace NEA_Prototype
             string userInput = "";
             GetEmployees(ref ListOfEmployees); //Need to update to include Liscenses. May make it another subroutine
             GetQualificationsAndRoles(ref QualificationsList, ref Roles);
+            RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles);
+            Console.ReadKey();
             if (LoginMenu(ListOfEmployees, ref userIndex))
             {
                 if (ListOfEmployees[userIndex].password == "proton1")
@@ -32,7 +34,7 @@ namespace NEA_Prototype
                     Console.Clear();
                     if (ListOfEmployees[userIndex].AccessType == "Owner" || ListOfEmployees[userIndex].AccessType == "Manager" || ListOfEmployees[userIndex].AccessType == "Admin")
                     {
-                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList);
+                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList, Roles);
 
                     }
                     else
@@ -205,7 +207,7 @@ namespace NEA_Prototype
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) exit program");
         } //Come up with better names later on
-        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList) //where accounts with admin privalleges or above can access all choices avaiable to them
+        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles) //where accounts with admin privalleges or above can access all choices avaiable to them
         {
             DisplayAdminChoices(ListOfEmployees, userIndex);
             userInput = Console.ReadLine().ToLower().Trim();
@@ -236,10 +238,10 @@ namespace NEA_Prototype
                     //EditTable();
                     break;
                 case "9":
-                    RotaSystemMaker();
+                    RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles);
                     break;
                 case "10":
-                    //Edit Qualifications file
+                    EditQualificationsFile();
                     break;
                 case "11":
                    DealWithTimeOffRequests(ListOfEmployees);
@@ -489,7 +491,7 @@ namespace NEA_Prototype
                     Console.ReadKey();
                 }
             }
-        }
+        } //done
         static void AddEmployee(ref List<Employee> EmployeeList, int userIndex, List<string> QualificationsList)
         {
             int empID, hoursworked = 0;
@@ -674,10 +676,39 @@ namespace NEA_Prototype
                 conn.Close();
             }
         }
-        static void AddToLicenceFile(string LicenceToAdd, string addQuery, string conn)
+        static void EditQualificationsFile()
         {
-            
-        } //Do other things first
+            string userInput = "";
+            while (userInput.ToLower().Trim() != "x")
+            {
+                Console.WriteLine("1)Add a qualification");
+                Console.WriteLine("2)Remove a qualification");
+                Console.WriteLine("x) Go back");
+                if (userInput == "1")
+                {
+                    Console.WriteLine("Input a qualification name");
+                    string qualification = Console.ReadLine();
+                    Console.WriteLine("Input what role people with that qualification can do");
+                    string roleAddition = Console.ReadLine();
+                    using (StreamWriter sw = File.AppendText("Qualifications.Txt"))
+                    { 
+                      sw.WriteLine(qualification+","+roleAddition);
+                    }
+                }
+                else if (userInput == "2")
+                {
+                    
+                } 
+                else if (userInput == "x")
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input");
+                }
+            }
+        } //Delete needs to be done still
         static void ShiftTrade() 
         {
 
@@ -819,7 +850,7 @@ namespace NEA_Prototype
                 Console.WriteLine("You've already requested time off");
                 Thread.Sleep(1000);
             }
-        }
+        } //done
         static void DealWithTimeOffRequests(List<Employee> EmployeeList)
         {
             int userIndex = -1;
@@ -847,8 +878,149 @@ namespace NEA_Prototype
                 }
             }
             File.WriteAllText("TimeOffRequests.txt", string.Empty);
-        } //should be done
-        static void RotaSystemMaker()
+        } //done
+        static void GetShiftRequirements(ref string dayStart, ref string dayEnd, ref List<int>numberOfEmployeesInRole, ref List<string>rolesForShifts)
+        {
+            using (StreamReader sr = new StreamReader("ShiftRequirements.txt"))
+            {
+                string line = "", tempstring = "";
+                numberOfEmployeesInRole = new List<int>();
+                rolesForShifts = new List<string>();
+                int result = -1;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    dayStart = line.Split(',')[0];
+                    dayEnd = line.Split(',')[1];
+                    line = sr.ReadLine();
+                    for (int i = 0;i< line.Length; i++)
+                    {
+                        if (line[i] != ',')
+                        {
+                            tempstring += line[i];
+                        }
+                        else if (line[i] == ',')
+                        {
+                            if (int.TryParse(tempstring, out result) == true)
+                            {
+                                numberOfEmployeesInRole.Add(result);
+                                tempstring = "";
+                            }
+                            else if (int.TryParse(tempstring,out result) == false)
+                            {
+                                rolesForShifts.Add(tempstring);
+                                tempstring = "";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        static void RotaSystemMaker(ref List<Employee> EmployeeList, ref List<string> QualificationList, ref List<string> Roles)
+        {
+            string dayStart = "", dayEnd = "", tempstring = "", day = "", role = "";
+            int shiftlength = 6, employeeIndex = -1, shiftindex =-1;
+            double startTime = 0.00, shiftchange = 0.00, highestPriority = 0.00;
+            List<int> numberOfEmployeesInRole = new List<int>();
+            List<string> rolesForShifts = new List<string>(); //parallel lists
+            int[] DayID = new int[] {1, 2, 3, 4, 5, 6, 7};
+            string[] ShiftDay = new string[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+            bool stillRolesLeft = true;
+            GetShiftRequirements(ref dayStart, ref dayEnd, ref numberOfEmployeesInRole, ref rolesForShifts);
+            for (int i = 0; i < dayStart.Length; i++)
+            {
+                if (dayStart[i] != ':')
+                {
+                    tempstring += dayStart[i];
+                }
+                else if (dayStart[i] == ':')
+                {
+                    tempstring += '.';
+                }
+            }
+            
+            startTime = double.Parse(tempstring);
+            string shift1StartTime = dayStart;
+            shiftchange = startTime + shiftlength;
+            tempstring = "";
+            
+            for (int i = 0; i < shiftchange.ToString().Length; i++)
+            {
+                if (shiftchange.ToString()[i] == '.')
+                {
+                    tempstring += ":";
+                }
+                else
+                {
+                    tempstring += shiftchange.ToString()[i];
+                }
+            }
+            string shift1EndTime = tempstring + 0;
+            string shift2StartTime = shift1EndTime;
+            string shift2EndTime = dayEnd;
+            List<string> shiftStart = new List<string>();
+            List<string> shiftEnd = new List<string>();
+            shiftStart.Add(shift1StartTime); shiftStart.Add(shift2StartTime);
+            shiftEnd.Add(shift1EndTime); shiftEnd.Add(shift2EndTime);
+
+            List<int> remainingRolesleft = new List<int>();
+            int index = 0;
+            do
+            {
+                for (int i = 0; i < shiftStart.Count();i++)
+                {
+                    for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
+                    {
+                        remainingRolesleft.Add(numberOfEmployeesInRole[j]);
+                    }
+                    do {
+                        for (int k = 0; k < remainingRolesleft.Count(); k++)
+                        {
+                            highestPriority = -1.0;
+                            for (int l = 0; l < rolesForShifts.Count(); l++)
+                            {
+                                for (int m = 0; m < EmployeeList.Count(); m++)
+                                {
+                                    EmployeeList[m].Priority(ShiftDay[index]);
+                                    int sharedIndex = Roles.IndexOf(rolesForShifts[l]);
+                                    if (EmployeeList[m].shiftPriority > highestPriority && EmployeeList[m].DaysCanWork.Contains(ShiftDay[index]) == true && ((Roles.Contains(rolesForShifts[l]) && EmployeeList[m].Qualifications.Contains(QualificationList[sharedIndex]) && remainingRolesleft[k] > 0)))
+                                    {
+                                        highestPriority = EmployeeList[l].shiftPriority;
+                                        remainingRolesleft[k] = remainingRolesleft[k]-1;
+                                        employeeIndex = m;
+                                        shiftindex += 1;
+                                        role = Roles[l];
+                                        EmployeeList[i].hoursWorked += shiftlength;
+                                    }                              
+                                    Console.ReadKey();
+                                }
+                            }
+                        }
+                        AddToShiftTable();
+                        AddToEmployeeShiftTable(employeeIndex,role,shiftindex);
+                    } while (stillRolesLeft == true);
+                    remainingRolesleft.Clear();
+                }
+                index++;
+            } while (ShiftDay.Count() > index);
+            Console.ReadKey();
+        }
+        static void AddToEmployeeShiftTable(int employeeIndex, string role, int shiftID)
+        {
+            string addQuery = "INSERT INTO EmployeeShifts (EmployeeID,ShiftID,EmployeeRole) VALUES (@empID, @shiftID,@empRole)";
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
+            {
+                conn.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(addQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@empID", employeeIndex);
+                    cmd.Parameters.AddWithValue("@shiftID", shiftID);
+                    cmd.Parameters.AddWithValue("@empRole", role);
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+                }
+            }
+        }
+        static void AddToShiftTable()
         {
 
         }
