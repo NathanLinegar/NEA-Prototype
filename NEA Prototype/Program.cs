@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -241,7 +242,7 @@ namespace NEA_Prototype
                     //Edit Qualifications file
                     break;
                 case "11":
-                   DealWithTimeOffRequests();
+                   DealWithTimeOffRequests(ListOfEmployees);
                     break;
                 case "0":
                     Settings(ListOfEmployees, userIndex);
@@ -256,8 +257,9 @@ namespace NEA_Prototype
         static void DisplayEmployeeChoices()
         {
             Console.WriteLine("1) View your rota");
-            Console.WriteLine("2) Request/Accept trade shift requests");
-            Console.WriteLine("3) Request time off");
+            Console.WriteLine("2) View full rota");
+            Console.WriteLine("3) Request/Accept trade shift requests");
+            Console.WriteLine("4) Request time off");
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) Exit program");
 
@@ -273,9 +275,12 @@ namespace NEA_Prototype
                     ViewRota();
                     break;
                 case "2":
-                    ShiftTrade();
+                    ViewFullRota(); 
                     break;
                 case "3":
+                    ShiftTrade();
+                    break;
+                case "4":
                     RequestTimeOff(ListOfEmployees,userIndex);
                     break;
                 case "0":
@@ -799,9 +804,9 @@ namespace NEA_Prototype
             {
                 Console.WriteLine("Input the reason for leave");
                 string reason = Console.ReadLine().Trim();
-                Console.WriteLine("Input when you want the leave to start (dd-MM-yyyy");
+                Console.WriteLine("Input when you want the leave to start (dd-MM-yyyy)");
                 string leaveStart = Console.ReadLine().Trim();
-                Console.WriteLine("Input when you want the leave to end (dd-MM-yyyy");
+                Console.WriteLine("Input when you want the leave to end (dd-MM-yyyy)");
                 string leaveEnd = Console.ReadLine().Trim();
                 using (StreamWriter sw = File.AppendText("TimeOffRequests.txt"))
                 { 
@@ -815,10 +820,34 @@ namespace NEA_Prototype
                 Thread.Sleep(1000);
             }
         }
-        static void DealWithTimeOffRequests()
+        static void DealWithTimeOffRequests(List<Employee> EmployeeList)
         {
+            int userIndex = -1;
+            DateTime leavestart = DateTime.Parse("01-01-0001");
+            DateTime leaveend = DateTime.Parse("01-01-0001");
+            string reason = "";
+            using (StreamReader sr = new StreamReader("TimeOffRequests.txt"))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    userIndex = int.Parse(line.Split(',')[0]);
+                    leavestart = DateTime.Parse(line.Split(',')[1]);
+                    leaveend = DateTime.Parse(line.Split(',')[2]);
+                    reason = line.Split(',')[3];
 
-        }
+                    Console.WriteLine(EmployeeList[userIndex].forename + "wants leave starting" + leavestart + "for" + reason);
+                    Console.WriteLine("Give them leave? (y/n)");
+                    string choice = Console.ReadLine().ToLower().Trim();
+                    if (choice == "y")
+                    {
+                        EmployeeList[userIndex].LeaveStart = leavestart;
+                        EmployeeList[userIndex].LeaveEnd = leaveend;
+                    }
+                }
+            }
+            File.WriteAllText("TimeOffRequests.txt", string.Empty);
+        } //should be done
         static void RotaSystemMaker()
         {
 
@@ -830,7 +859,7 @@ namespace NEA_Prototype
         static void ViewFullRota()
         {
 
-        } //same of one above but everything of importance to the rota system (no passwords displayed)
+        } //same of one above but everything of importance to the rota system 
     }
 
 }
