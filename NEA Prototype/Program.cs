@@ -918,7 +918,7 @@ namespace NEA_Prototype
         static void RotaSystemMaker(ref List<Employee> EmployeeList, ref List<string> QualificationList, ref List<string> Roles)
         {
             string dayStart = "", dayEnd = "", tempstring = "", day = "", role = "";
-            int shiftlength = 6, employeeIndex = -1, shiftindex =-1;
+            int shiftlength = 6, employeeIndex = -1, shiftID =-1;
             double startTime = 0.00, shiftchange = 0.00, highestPriority = 0.00;
             List<int> numberOfEmployeesInRole = new List<int>();
             List<string> rolesForShifts = new List<string>(); //parallel lists
@@ -966,6 +966,7 @@ namespace NEA_Prototype
             int index = 0;
             do
             {
+                employeeIndex = -1
                 for (int i = 0; i < shiftStart.Count();i++)
                 {
                     for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
@@ -987,7 +988,6 @@ namespace NEA_Prototype
                                         highestPriority = EmployeeList[l].shiftPriority;
                                         remainingRolesleft[k] = remainingRolesleft[k]-1;
                                         employeeIndex = m;
-                                        shiftindex += 1;
                                         role = Roles[l];
                                         EmployeeList[i].hoursWorked += shiftlength;
                                     }                              
@@ -995,8 +995,8 @@ namespace NEA_Prototype
                                 }
                             }
                         }
-                        AddToShiftTable();
-                        AddToEmployeeShiftTable(employeeIndex,role,shiftindex);
+                        AddToShiftTable(ref ShiftID);
+                        AddToEmployeeShiftTable(employeeIndex,role,ref shiftID);
                     } while (stillRolesLeft == true);
                     remainingRolesleft.Clear();
                 }
@@ -1004,7 +1004,7 @@ namespace NEA_Prototype
             } while (ShiftDay.Count() > index);
             Console.ReadKey();
         }
-        static void AddToEmployeeShiftTable(int employeeIndex, string role, int shiftID)
+        static void AddToEmployeeShiftTable(int employeeIndex, string role, ref int shiftID)
         {
             string addQuery = "INSERT INTO EmployeeShifts (EmployeeID,ShiftID,EmployeeRole) VALUES (@empID, @shiftID,@empRole)";
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
@@ -1020,9 +1020,9 @@ namespace NEA_Prototype
                 }
             }
         }
-        static void AddToShiftTable()
+        static void AddToShiftTable(ref in ShiftID)
         {
-
+          ShiftID +=1;
         }
         static void ViewRota()
         {
