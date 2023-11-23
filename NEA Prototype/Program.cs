@@ -988,7 +988,7 @@ namespace NEA_Prototype
             int index = 0;
             do
             {
-                employeeIndex = -1; //what does this do
+                employeeIndex = -1; //what does this do. OHHHH it resets the index of the employee chosen. idk if that affects the system at all but DO NOT REMOVE
                 for (int i = 0; i < shiftStart.Count();i++) //gets the shift starting day
                 {
                     for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
@@ -1004,7 +1004,7 @@ namespace NEA_Prototype
                                 for (int m = 0; m < EmployeeList.Count(); m++)
                                 {
                                     EmployeeList[m].Priority(ShiftDay[index]);
-                                    int sharedIndex = Roles.IndexOf(rolesForShifts[l]);
+                                    /*int sharedIndex = Roles.IndexOf(rolesForShifts[l]);
                                     if (EmployeeList[m].shiftPriority > highestPriority && EmployeeList[m].DaysCanWork.Contains(ShiftDay[index]) == true && ((Roles.Contains(rolesForShifts[l]) && EmployeeList[m].Qualifications.Contains(QualificationList[sharedIndex]) && remainingRolesleft[k] > 0)))
                                     {
                                         highestPriority = EmployeeList[l].shiftPriority;
@@ -1013,9 +1013,13 @@ namespace NEA_Prototype
                                         role = Roles[l];
                                         EmployeeList[i].hoursWorked += shiftlength;
                                     }                              
-                                    Console.ReadKey();
+                                    Console.ReadKey(); */
                                 }
                             }
+                        }
+                        foreach(Employee emp in EmployeeList)
+                        {
+
                         }
                         AddToShiftTable( shiftID);
                         AddToEmployeeShiftTable(employeeIndex,role, shiftID);

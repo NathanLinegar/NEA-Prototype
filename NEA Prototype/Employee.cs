@@ -14,7 +14,7 @@ namespace NEA_Prototype
         public int EmployeeID, extraShiftsWorked, contractedHours, maxhours, hoursWorked;
         public string forename, surname, emailAdd, password, phoneNum, AccessType, ContractType, daysString;
         public DateTime DOB, LeaveStart, LeaveEnd;
-        public bool acceptExtraShifts, onLeave, requestedTimeOff;
+        public bool acceptExtraShifts, onLeave, requestedTimeOff, workingshift;
         public double Wage;
         public double shiftPriority;
         public string[] DaysCanWork = new string[7];
@@ -109,6 +109,10 @@ namespace NEA_Prototype
         public bool HasRequestedTimeOff()
         {
             return requestedTimeOff;
+        }
+        public bool workingShift()
+        {
+            return workingshift;
         }
     }
     public class FullTime : Employee
