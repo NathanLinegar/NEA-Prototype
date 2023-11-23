@@ -18,7 +18,7 @@ namespace NEA_Prototype
             List<string> Roles = new List<string>();
             int userIndex = -1;
             string userInput = "";
-            GetEmployees(ref ListOfEmployees); //Need to update to include Liscenses. May make it another subroutine
+            GetEmployees(ref ListOfEmployees); 
             GetQualificationsAndRoles(ref QualificationsList, ref Roles);
             RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles);
             Console.ReadKey();
@@ -206,7 +206,7 @@ namespace NEA_Prototype
             }
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) exit program");
-        } //Come up with better names later on
+        } //Come up with better wording later on if there is time
         static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles) //where accounts with admin privalleges or above can access all choices avaiable to them
         {
             DisplayAdminChoices(ListOfEmployees, userIndex);
@@ -255,7 +255,7 @@ namespace NEA_Prototype
                     Console.WriteLine("Invalid input");
                     break;
             }
-        }
+        } //EDIT TABLE NEEDS TO BE MADE
         static void DisplayEmployeeChoices()
         {
             Console.WriteLine("1) View your rota");
@@ -501,28 +501,28 @@ namespace NEA_Prototype
             bool correctdata = false, onLeave = false;
             string addQuery = "INSERT INTO Employees (EmployeeID, Forename, Surname, Email, Password, AccessType, PhoneNum, DOB, AcceptExtraShift, ContractType, Wage, DaysCanWork, HoursWorked, OnLeave, LeaveStart, LeaveEnd) VALUES (@ID, @Fore, @Sur, @Email, @Password, @Access, @PhoneNum, @DOB, @AccExtraShift, @ContType, @Wage, @Days, @HoursWorked, @OnLeave, @LeaveS, @LeaveE)";
             string addQuery2 = "INSERT INTO Qualifications (QualificationID, EmployeeID, QualificationName) VALUES (@QualificationID,@EmpID, @Qualification)";
-
+            char userInput;
             empID = EmployeeList.Count;
             password = "proton1";
             List<string> AddQualifications = new List<string>();
             do
             {
                 Console.Clear();
-                Console.WriteLine("Add Employee:");
-                Console.WriteLine("Input forname");
+                Console.WriteLine("Add Employee:\n");
+                Console.WriteLine("Input forname\n");
                 forename = Console.ReadLine().Trim();
-                Console.WriteLine("Input surname");
+                Console.WriteLine("Input surname\n");
                 surname = Console.ReadLine().Trim();
-                Console.WriteLine("Input the email address");
+                Console.WriteLine("Input the email address\n");
                 emailAdd = Console.ReadLine().Trim();
                 if (EmployeeList[userIndex].AccessType.ToLower() == "owner")
                 {
-                    Console.WriteLine("Input account type (Owner,Admin,Manager,Standard)");
+                    Console.WriteLine("Input account type (Owner,Admin,Manager,Standard)\n");
                     accountType = Console.ReadLine().Trim();
                 }
                 else if (EmployeeList[userIndex].AccessType.ToLower() == "manager")
                 {
-                    Console.WriteLine("Input account type (Admin,Standard)");
+                    Console.WriteLine("Input account type (Admin,Standard)\n");
                     accountType = Console.ReadLine().Trim();
                     if (accountType.ToLower() != "admin" || accountType.ToLower() != "standard")
                     {
@@ -533,18 +533,38 @@ namespace NEA_Prototype
                 {
                     accountType = "Standard";
                 }
-                Console.WriteLine("Input phone number");
+                Console.WriteLine("Input phone number\n");
                 phonenum = Console.ReadLine().Trim();
-                Console.WriteLine("Input days they can work as a string e.g. Monday,Tuesday,Wednesday");
+                Console.WriteLine("Input days they can work as a string e.g. Monday,Tuesday,Wednesday\n");
                 daysWorkable = Console.ReadLine().Trim();
-                Console.WriteLine("Input contract type (Full Time, Part Time, Zero Hour)");
+                Console.WriteLine("Input contract type (Full Time, Part Time, Zero Hour)\n");
                 contractType = Console.ReadLine();
-                Console.WriteLine("Input DOB (dd-MM-yyyy)");
+                Console.WriteLine("Input DOB (dd-MM-yyyy)\n");
                 DOB = Console.ReadLine().Trim();
-                Console.WriteLine("Input wage (00.00)");
+                Console.WriteLine("Input wage (00.00)\n");
                 wage = double.Parse(Console.ReadLine().Trim());
-                Console.WriteLine("Input if they will accept extra shifts or not (0.0 for no) (1.0 for yes)");
-                accExtraShift = double.Parse(Console.ReadLine().Trim());
+                try
+                {
+                    Console.WriteLine("Input if they will accept extra shifts or not (y/n)");
+                    userInput = char.Parse(Console.ReadLine().Trim().ToLower());
+                    if (userInput == 'y')
+                    {
+                        accExtraShift = 1.0;
+                    }
+                    else if (userInput == 'n')
+                    {
+                        accExtraShift = 0.0;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input");
+                        accExtraShift = 0.0;
+                    }
+                }
+                catch 
+                {
+                    accExtraShift= 0.0;
+                }
                 while (licenceInput != "x")
                 {
                     Console.WriteLine("Input a licence the employee has (x to leave loop)");
@@ -554,11 +574,12 @@ namespace NEA_Prototype
                     {
                         Console.WriteLine(QualificationsList[i]);
                     }
-                    licenceInput = Console.ReadLine().Trim();
-                    if (licenceInput.ToLower() != "x")
-                    {
-                        AddQualifications.Add(licenceInput);
-                    }
+                        licenceInput = Console.ReadLine().Trim();
+                        if (licenceInput.ToLower() != "x")
+                        {
+                            AddQualifications.Add(licenceInput);
+                        }
+                    
                 }
                 Console.WriteLine("\nIs all the data correct (y/n)");
                 allDataCorrect = Console.ReadLine().Trim();
@@ -623,7 +644,8 @@ namespace NEA_Prototype
             }
             Console.ReadKey();
 
-        } //Done
+        } //Add try catch, make it so licenses can only be valid licences from txt file
+        //At the time of making AddEmployee me and god knew how to fix it now only god knows
         static void RemoveEmployee(ref List<Employee> EmployeeList)
         {
             Console.WriteLine("Input the email of the employee you wish to remove");
@@ -660,7 +682,7 @@ namespace NEA_Prototype
                 }
                 conn.Close();
             }
-        } //Completed //CHECK IT DELETES
+        } //Gotta have it remove the employee shift and put in someone who is qualified to fill that shift
         static void InsertIntoQualificationsTable(string qualification, string addQuery,List<string> QualificationsList, int empID) //Done
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
