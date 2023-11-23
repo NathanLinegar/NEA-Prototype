@@ -36,3 +36,22 @@ C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\
 C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CopyComplete
 C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.exe
 C:\Users\NLine\Source\Repos\NathanLinegar\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.pdb
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.AssemblyReference.cache
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.SuggestedBindingRedirects.cache
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CoreCompileInputs.cache
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.exe
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.pdb
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\x86\sqlite3.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\x64\sqlite3.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe.config
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.exe
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\NEA Prototype.pdb
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.EF6.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.Linq.dll
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.xml
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\EntityFramework.SqlServer.xml
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\bin\Debug\System.Data.SQLite.xml
+\\Rhea\home\2022\22NL1827\Documents\GitHub\NEA-Prototype\NEA-Prototype\NEA Prototype\obj\Debug\NEA Prototype.csproj.CopyComplete

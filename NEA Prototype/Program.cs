@@ -660,7 +660,7 @@ namespace NEA_Prototype
                 }
                 conn.Close();
             }
-        } //Completed
+        } //Completed //CHECK IT DELETES
         static void InsertIntoQualificationsTable(string qualification, string addQuery,List<string> QualificationsList, int empID) //Done
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
@@ -966,8 +966,8 @@ namespace NEA_Prototype
             int index = 0;
             do
             {
-                employeeIndex = -1
-                for (int i = 0; i < shiftStart.Count();i++)
+                employeeIndex = -1; //what does this do
+                for (int i = 0; i < shiftStart.Count();i++) //gets the shift starting day
                 {
                     for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
                     {
@@ -995,8 +995,8 @@ namespace NEA_Prototype
                                 }
                             }
                         }
-                        AddToShiftTable(ref ShiftID);
-                        AddToEmployeeShiftTable(employeeIndex,role,ref shiftID);
+                        AddToShiftTable( shiftID);
+                        AddToEmployeeShiftTable(employeeIndex,role, shiftID);
                     } while (stillRolesLeft == true);
                     remainingRolesleft.Clear();
                 }
@@ -1004,7 +1004,7 @@ namespace NEA_Prototype
             } while (ShiftDay.Count() > index);
             Console.ReadKey();
         }
-        static void AddToEmployeeShiftTable(int employeeIndex, string role, ref int shiftID)
+        static void AddToEmployeeShiftTable(int employeeIndex, string role, int shiftID)
         {
             string addQuery = "INSERT INTO EmployeeShifts (EmployeeID,ShiftID,EmployeeRole) VALUES (@empID, @shiftID,@empRole)";
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
@@ -1020,10 +1020,10 @@ namespace NEA_Prototype
                 }
             }
         }
-        static void AddToShiftTable(ref in ShiftID)
-        {
+      static void AddToShiftTable( int ShiftID)
+      {
           ShiftID +=1;
-        }
+      }
         static void ViewRota()
         {
 
