@@ -984,11 +984,11 @@ namespace NEA_Prototype
             shiftStart.Add(shift1StartTime); shiftStart.Add(shift2StartTime);
             shiftEnd.Add(shift1EndTime); shiftEnd.Add(shift2EndTime);
 
-            List<int> remainingRolesleft = new List<int>();
+            List<int> remainingRolesleft;
             int index = 0;
             do
             {
-                employeeIndex = -1; //what does this do. OHHHH it resets the index of the employee chosen. idk if that affects the system at all but DO NOT REMOVE
+                remainingRolesleft = new List<int>();
                 for (int i = 0; i < shiftStart.Count();i++) //gets the shift starting day
                 {
                     for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
@@ -996,15 +996,25 @@ namespace NEA_Prototype
                         remainingRolesleft.Add(numberOfEmployeesInRole[j]);
                     }
                     do {
-                        for (int k = 0; k < remainingRolesleft.Count(); k++)
+                        for (int j = 0; j < remainingRolesleft.Count(); j++)
                         {
-                            highestPriority = -1.0;
-                            for (int l = 0; l < rolesForShifts.Count(); l++)
+                            stillRolesLeft = true;
+                            if (remainingRolesleft[j] == 0)
                             {
-                                for (int m = 0; m < EmployeeList.Count(); m++)
+                                stillRolesLeft = false;
+                            }
+                        }
+                        for (int k = 0; k < rolesForShifts.Count(); k++) //parallel with remainingRolesLeft
+                        {
+                            if (remainingRolesleft[k] > 0)
+                            {
+
+                            }
+                        }
+                          /*      for (int m = 0; m < EmployeeList.Count(); m++)
                                 {
                                     EmployeeList[m].Priority(ShiftDay[index]);
-                                    /*int sharedIndex = Roles.IndexOf(rolesForShifts[l]);
+                                    int sharedIndex = Roles.IndexOf(rolesForShifts[l]);
                                     if (EmployeeList[m].shiftPriority > highestPriority && EmployeeList[m].DaysCanWork.Contains(ShiftDay[index]) == true && ((Roles.Contains(rolesForShifts[l]) && EmployeeList[m].Qualifications.Contains(QualificationList[sharedIndex]) && remainingRolesleft[k] > 0)))
                                     {
                                         highestPriority = EmployeeList[l].shiftPriority;
@@ -1014,10 +1024,10 @@ namespace NEA_Prototype
                                         EmployeeList[i].hoursWorked += shiftlength;
                                     }                              
                                     Console.ReadKey(); */
-                                }
-                            }
-                        }
-                        foreach(Employee emp in EmployeeList)
+                                
+                        
+                     
+                        foreach(Employee emp in EmployeeList) //rest working shift to false at change of time
                         {
 
                         }
@@ -1061,4 +1071,3 @@ namespace NEA_Prototype
     }
 
 }
-A
