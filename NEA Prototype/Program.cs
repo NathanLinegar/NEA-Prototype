@@ -18,12 +18,12 @@ namespace NEA_Prototype
             List<string> QualificationsList = new List<string>();
             List<string> Roles = new List<string>();
             List<Shift> Shifts = new List<Shift>();
+            List<EmployeeShift> EmployeeShifts = new List<EmployeeShift>();
             int userIndex = -1;
             string userInput = "";
             GetEmployees(ref ListOfEmployees); 
             GetQualificationsAndRoles(ref QualificationsList, ref Roles);
             GetShiftsList(ref Shifts);
-            ViewRota(0);
             Console.ReadKey();
             if (LoginMenu(ListOfEmployees, ref userIndex))
             {
@@ -37,12 +37,12 @@ namespace NEA_Prototype
                     Console.Clear();
                     if (ListOfEmployees[userIndex].AccessType == "Owner" || ListOfEmployees[userIndex].AccessType == "Manager" || ListOfEmployees[userIndex].AccessType == "Admin")
                     {
-                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList, Roles, Shifts);
+                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList, Roles, Shifts, EmployeeShifts);
 
                     }
                     else
                     {
-                        EmployeeChoices(ListOfEmployees, userIndex, ref userInput);
+                        EmployeeChoices(ListOfEmployees, userIndex, ref userInput, Shifts, EmployeeShifts);
                     }
                 }
             }
@@ -235,17 +235,17 @@ namespace NEA_Prototype
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) exit program");
         } 
-        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles, List<Shift> Shifts)
+        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles, List<Shift> Shifts, List<EmployeeShift> EmployeeShifts)
         {
             DisplayAdminChoices(ListOfEmployees, userIndex);
             userInput = Console.ReadLine().ToLower().Trim();
             switch (userInput)
             {
                 case "1":
-                    ViewRota(userIndex);
+                    ViewRota(userIndex, Shifts, EmployeeShifts, ListOfEmployees);
                     break;
                 case "2":
-                    ViewFullRota();
+                    ViewFullRota(userIndex, Shifts, EmployeeShifts, ListOfEmployees);
                     break;
                 case "3":
                     ShiftTrade();
@@ -295,17 +295,17 @@ namespace NEA_Prototype
 
 
         }
-        static void EmployeeChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput)
+        static void EmployeeChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<Shift> Shifts, List<EmployeeShift> EmployeeShifts)
         {
             DisplayEmployeeChoices();
             userInput = Console.ReadLine().ToLower().Trim();
             switch (userInput)
             {
                 case "1":
-                    ViewRota(userIndex);
+                    ViewRota(userIndex, Shifts, EmployeeShifts, ListOfEmployees);
                     break;
                 case "2":
-                    ViewFullRota(); 
+                    ViewFullRota(userIndex, Shifts, EmployeeShifts, ListOfEmployees); 
                     break;
                 case "3":
                     ShiftTrade();
@@ -1124,20 +1124,39 @@ namespace NEA_Prototype
             }
             
       }
-        static void ViewRota(int UserIndex)
+        static void ViewRota(int UserIndex,List<Shift>Shifts, List<EmployeeShift> empShift, List<Employee> Employees)
         {
             DateTime currentWeekBeginning = FirstDayOfWeek(DateTime.Now);
             for (int i = 0; i < 7; i++)
             {
-                Console.WriteLine(currentWeekBeginning.AddDays(i).DayOfWeek.ToString());
+                Console.Write(currentWeekBeginning.AddDays(i).DayOfWeek.ToString());
+                foreach (EmployeeShift Shift in empShift)
+                {
+                    int ShiftID = Shift.shiftID;
+                    if (Shift.employeeID == Employees[UserIndex].EmployeeID && Shifts[ShiftID].shiftDay == currentWeekBeginning.AddDays(i))
+                    {
+                        Console.Write(Shifts[ShiftID].shiftDay + " " + Shifts[ShiftID].shiftStartTime + " " + Shifts[ShiftID].shiftEndTime + " " + Shift.role);
+                    }
+                }
+                Console.WriteLine();
             }
-
-
-            Console.ReadKey();
-        } //needs everything to do with getting data from the database done first
-        static void ViewFullRota()
+        }
+        static void ViewFullRota(int UserIndex, List<Shift> Shifts, List<EmployeeShift> empShift, List<Employee> Employees)
         {
-
+            DateTime currentWeekBeginning = FirstDayOfWeek(DateTime.Now);
+            for (int i = 0; i < 7; i++)
+            {
+                foreach (EmployeeShift Shift in empShift)
+                {
+                    int ShiftID = Shift.shiftID;
+                    int empID = Shift.employeeID;
+                    if (Shifts[ShiftID].shiftDay == currentWeekBeginning.AddDays(i))
+                    {
+                        Console.Write(Shifts[ShiftID].shiftDay + " " + Shifts[ShiftID].shiftStartTime + " " + Shifts[ShiftID].shiftEndTime + " " + Employees[empID].forename + " " + Employees[empID].surname + " " + Shift.role);
+                    }
+                }
+                Console.WriteLine();
+            }
         } //same of one above but everything of importance to the rota system 
         static void ShiftTrade()
         {
