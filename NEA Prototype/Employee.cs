@@ -93,7 +93,7 @@ namespace NEA_Prototype
         }
         public virtual void Priority(string day)
         {
-            if ((DaysCanWork.Count() == 1 )&& (DaysCanWork.Contains(day) == true))
+            if ((DaysCanWork.Count() == 1 ) && (DaysCanWork.Contains(day) == true))
             {
                 shiftPriority = 1.0;
             }
@@ -103,7 +103,7 @@ namespace NEA_Prototype
             }
             else
             {
-                shiftPriority = 1.0- (hoursWorked / contractedHours);
+                shiftPriority = 1.0 - ((double)hoursWorked + 0.0001 / contractedHours + 0.0001);
             }
         }
         public bool HasRequestedTimeOff()
@@ -130,7 +130,7 @@ namespace NEA_Prototype
 
     public class PartTime : Employee
     {
-        public PartTime(int ID, string fore, string sur, string email, string pass, string phone, string ContType, string days, string access, double AccextraShift, double pay, string DoB, string leaveStart, string leaveEnd) : base(ID, fore, sur, email, pass, phone, ContType, days, access, AccextraShift, pay, DoB, leaveStart, leaveEnd) { }
+        public PartTime(int ID, string fore, string sur, string email, string pass, string phone, string ContType, string days, string access, double AccextraShift, double pay, string DoB, string leaveStart, string leaveEnd) : base(ID, fore, sur, email, pass, phone, ContType, days, access, AccextraShift, pay, DoB, leaveStart, leaveEnd) {ContractedHours(); }
         public override void ContractedHours()
         {
             contractedHours = 16;
@@ -142,14 +142,14 @@ namespace NEA_Prototype
     }
     public class ZeroHour : Employee
     {
-        public ZeroHour(int ID, string fore, string sur, string email, string pass, string phone, string ContType, string days, string access, double AccextraShift, double pay, string DoB, string leaveStart, string leaveEnd) : base(ID, fore, sur, email, pass, phone, ContType, days, access, AccextraShift, pay, DoB, leaveStart, leaveEnd) { }
+        public ZeroHour(int ID, string fore, string sur, string email, string pass, string phone, string ContType, string days, string access, double AccextraShift, double pay, string DoB, string leaveStart, string leaveEnd) : base(ID, fore, sur, email, pass, phone, ContType, days, access, AccextraShift, pay, DoB, leaveStart, leaveEnd) { ContractedHours(); }
         public override void ContractedHours()
         {
             contractedHours = 0;
         }
         public override void Priority(string day)
         {
-            shiftPriority = 0;
+            shiftPriority = 0.0;
         }
     }
 }

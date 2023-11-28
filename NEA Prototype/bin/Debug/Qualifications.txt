@@ -1,4 +1,4 @@
-Liquor,bar
 Manager,manager
+Liquor,bar
 Cook,kitchen
 Waiter,waiter
