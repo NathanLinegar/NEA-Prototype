@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,8 @@ namespace NEA_Prototype
             string userInput = "";
             GetEmployees(ref ListOfEmployees); 
             GetQualificationsAndRoles(ref QualificationsList, ref Roles);
-            RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles);
+            GetShiftsList(ref Shifts);
+            ViewRota(0);
             Console.ReadKey();
             if (LoginMenu(ListOfEmployees, ref userIndex))
             {
@@ -35,7 +37,7 @@ namespace NEA_Prototype
                     Console.Clear();
                     if (ListOfEmployees[userIndex].AccessType == "Owner" || ListOfEmployees[userIndex].AccessType == "Manager" || ListOfEmployees[userIndex].AccessType == "Admin")
                     {
-                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList, Roles);
+                        AdminChoices(ListOfEmployees, userIndex, ref userInput, QualificationsList, Roles, Shifts);
 
                     }
                     else
@@ -68,7 +70,7 @@ namespace NEA_Prototype
                 {
                     conn.Open();
                     SQLiteCommand cmd = new SQLiteCommand(query, conn);
-                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) // need to fix this later on
+                    using (SQLiteDataReader rdr = cmd.ExecuteReader()) 
                     {
                         while (rdr.Read())
                         {
@@ -128,9 +130,9 @@ namespace NEA_Prototype
                 while ((line = rdr.ReadLine()) != null)
                 {
                     QualificationName = line.Split(',')[0];
-                    Qualifications.Add(QualificationName);
+                    Qualifications.Add(QualificationName.ToLower());
                     roleName = line.Split(',')[1];
-                    Roles.Add(roleName);
+                    Roles.Add(roleName.ToLower());
                 }
                 rdr.Close();
             }
@@ -154,21 +156,36 @@ namespace NEA_Prototype
                         {
                             if (EmployeeList[i].EmployeeID == employeeID)
                             {
-                                EmployeeList[i].Qualifications.Add(qualification);
+                                EmployeeList[i].Qualifications.Add(qualification.ToLower());
                             }
                         }
                     }
                 }
             }
         } 
-        static void GetShiftsList()
+        static void GetShiftsList(ref List<Shift> shifts)
         {
+            Shift shift;
             int shiftID;
-            DateTime shiftStart, shiftEnd, ShiftDay;
+            string shiftStart, shiftEnd, ShiftDay;
             string query = "SELECT * FROM Shifts";
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db;Version=3;"))
             {
                 conn.Open();
+                SQLiteCommand cmd = new SQLiteCommand(query, conn);
+                using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        shiftID = rdr.GetInt32(rdr.GetOrdinal("ShiftID"));
+                        shiftStart = rdr.GetString(rdr.GetOrdinal("ShiftStart"));
+                        shiftEnd = rdr.GetString(rdr.GetOrdinal("ShiftEnd"));
+                        ShiftDay = rdr.GetString(rdr.GetOrdinal("ShiftDay"));
+                        shift = new Shift(shiftID, ShiftDay, shiftStart, shiftEnd);
+                        shifts.Add(shift);
+                    }
+                }
+                conn.Close();
             }
         }
         static bool LoginMenu(List<Employee> ListOfEmployees, ref int UserIndex)
@@ -218,14 +235,14 @@ namespace NEA_Prototype
             Console.WriteLine("0) Settings");
             Console.WriteLine("x) exit program");
         } 
-        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles)
+        static void AdminChoices(List<Employee> ListOfEmployees, int userIndex, ref string userInput, List<string> QualificationsList, List<string> Roles, List<Shift> Shifts)
         {
             DisplayAdminChoices(ListOfEmployees, userIndex);
             userInput = Console.ReadLine().ToLower().Trim();
             switch (userInput)
             {
                 case "1":
-                    ViewRota();
+                    ViewRota(userIndex);
                     break;
                 case "2":
                     ViewFullRota();
@@ -246,10 +263,10 @@ namespace NEA_Prototype
                     RemoveEmployee(ref ListOfEmployees);
                     break;
                 case "8":
-                    //EditTable();
+                    //EditQualificationTable();
                     break;
                 case "9":
-                    RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles);
+                    RotaSystemMaker(ref ListOfEmployees, ref QualificationsList, ref Roles, Shifts);
                     break;
                 case "10":
                     EditQualificationsFile();
@@ -285,7 +302,7 @@ namespace NEA_Prototype
             switch (userInput)
             {
                 case "1":
-                    ViewRota();
+                    ViewRota(userIndex);
                     break;
                 case "2":
                     ViewFullRota(); 
@@ -692,7 +709,7 @@ namespace NEA_Prototype
                 }
                 conn.Close();
             }
-        } //Gotta have it remove the employee shift and put in someone who is qualified to fill that shift
+        } //Gotta have it remove the employee shift and their qualifications and put in someone who is qualified to fill that shift
         static void InsertIntoQualificationsTable(string qualification, string addQuery,List<string> QualificationsList, int empID)
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;"))
@@ -943,16 +960,18 @@ namespace NEA_Prototype
                 }
             }
         }
-        static void RotaSystemMaker(ref List<Employee> EmployeeList, ref List<string> QualificationList, ref List<string> Roles)
+        static void RotaSystemMaker(ref List<Employee> EmployeeList, ref List<string> QualificationList, ref List<string> Roles, List<Shift> Shifts)
         {
-            string dayStart = "", dayEnd = "", tempstring = "", day = "", role = "";
-            int shiftlength = 6, employeeIndex = -1, shiftID = -1, employeeID = -1;
-            double startTime = 0.00, shiftchange = 0.00, highestPriority = 0.00;
+            string dayStart = "", dayEnd = "", tempstring = "";
+            int shiftlength = 6, shiftID = Shifts.Count;
+            double startTime = 0.00, shiftchange = 0.00;
             List<int> numberOfEmployeesInRole = new List<int>();
             List<string> rolesForShifts = new List<string>(); //parallel lists
             int[] DayID = new int[] {1, 2, 3, 4, 5, 6, 7};
             string[] ShiftDay = new string[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-            bool stillRolesLeft = true;
+            DateTime weekBeginningDate = FirstDayOfWeek(DateTime.Now);
+            DateTime dayOfShift;
+            DateTime greatestDay = new DateTime(0001, 01, 01);
             GetShiftRequirements(ref dayStart, ref dayEnd, ref numberOfEmployeesInRole, ref rolesForShifts);
             for (int i = 0; i < dayStart.Length; i++)
             {
@@ -990,84 +1009,87 @@ namespace NEA_Prototype
             shiftStart.Add(shift1StartTime); shiftStart.Add(shift2StartTime);
             shiftEnd.Add(shift1EndTime); shiftEnd.Add(shift2EndTime);
 
-            List<int> remainingRolesleft;
+            Shift shift;
             int index = 0;
+            int startShiftIndex = Shifts.Count();
+            int endShiftIndex = Shifts.Count + 14;
+            DateTime currentDate = new DateTime(0001, 01, 01);
+            TimeSpan timespan = new TimeSpan(00, 00, 00);
+            DateTime currentStartTime = DateTime.Parse(timespan.ToString());
+            if (Shifts.Count > 0)
+            {
+                for(int i = 0; i < Shifts.Count;i++)
+                {
+                    if (Shifts[i].shiftDay > greatestDay)
+                    {
+                        weekBeginningDate = Shifts[i].shiftDay.AddDays(1);
+                    }
+                }
+            }
             do
             {
-                highestPriority = -1; //resets highestpriority so no matter what someone always beats the value so they get put on the shift
-                stillRolesLeft = true;
-                Console.WriteLine(ShiftDay[index]);
-                for (int i = 0; i < shiftStart.Count();i++) //gets the shift starting day
+                dayOfShift = weekBeginningDate.AddDays(index);
+                for (int i = 0; i < shiftStart.Count; i++)
                 {
-                    remainingRolesleft = new List<int>();
-                    Console.WriteLine(shiftStart[i]);
-                    foreach (Employee emp in EmployeeList)
-                    {
-                        emp.workingshift = false;
-                    }
-                    for (int j = 0; j < numberOfEmployeesInRole.Count(); j++)
-                    {
-                        remainingRolesleft.Add(numberOfEmployeesInRole[j]);
-                    }
-                    foreach (Employee emp in EmployeeList)
-                    {
-                        emp.Priority(ShiftDay[index]);
-                    }
-                    do {
-                        for (int j = 0; j < remainingRolesleft.Count(); j++)
-                        {
-                            stillRolesLeft = true;
-                            if (remainingRolesleft[j] == 0)
-                            {
-                                stillRolesLeft = false;
-                            }
-                        }
-                        stillRolesLeft = false;
-                        for (int k = 0; k < rolesForShifts.Count(); k++) //parallel with remainingRolesLeft
-                        {
-                            if (remainingRolesleft[k] > 0)
-                            {
-                                Console.WriteLine(rolesForShifts[k]);
-                                Console.WriteLine(QualificationList[k]);
-                                Console.WriteLine(remainingRolesleft[k]);
-                                for (int m = 0; m < EmployeeList.Count(); m++)
-                                {
-                                    if (EmployeeList[m].shiftPriority == 1 && EmployeeList[m].DaysCanWork.Contains(ShiftDay[index]) == true && EmployeeList[m].Qualifications.Contains(QualificationList[k]) && remainingRolesleft[k] > 0 && EmployeeList[m].workingshift == false)
-                                    {
-                                        highestPriority = EmployeeList[m].shiftPriority;
-                                        employeeID = EmployeeList[m].EmployeeID;
-                                        role = rolesForShifts[k];
-                                        employeeIndex = m;
-                                        break;
-                                    }
-                                    else if (EmployeeList[m].shiftPriority > highestPriority && EmployeeList[m].DaysCanWork.Contains(ShiftDay[index]) == true && EmployeeList[m].Qualifications.Contains(QualificationList[k]) && remainingRolesleft[k] > 0 && remainingRolesleft[k] > 0 && EmployeeList[m].workingshift == false)
-                                    { 
-                                        highestPriority = EmployeeList[m].shiftPriority;
-                                        employeeID = EmployeeList[m].EmployeeID;
-                                        role = rolesForShifts[k];
-                                        employeeIndex = m;
-                                    }             
-                                    else
-                                    {
-
-                                    }
-                                }
-                                shiftID += 1;
-                                AddToShiftTable( shiftID);
-                                AddToEmployeeShiftTable(employeeID, role, shiftID);
-                                remainingRolesleft[k] -= 1;
-                                EmployeeList[employeeIndex].hoursWorked += shiftlength;
-                                Console.WriteLine(remainingRolesleft[k]);
-                            }
-                        }
-                    } while (stillRolesLeft == true);
+                    AddToShiftTable(shiftID, dayOfShift, shiftStart[i], shiftEnd[i]);
+                    shift = new Shift(shiftID, dayOfShift, shiftStart[i], shiftEnd[i]);
+                    shiftID++;
                 }
-                Console.WriteLine("Hello World");
                 index++;
             } while (ShiftDay.Count() > index);
-            Console.WriteLine("FINALLY THE LOOP IS DONE");
-            Console.ReadKey();
-        } //SHIFTID NEEDS TO BE BASED ON SHIFTLISTCOUNT
+            do
+            {
+                dayOfShift = weekBeginningDate.AddDays(index);
+
+                for (int i = 0; i < Shifts.Count; i++)
+                {
+                    if (Shifts[i].shiftDay != currentDate || Shifts[i].shiftStartTime != currentStartTime)
+                    {
+                        currentDate = Shifts[i].shiftDay;
+                        currentStartTime = Shifts[i].shiftStartTime;
+                        foreach (Employee emp in EmployeeList)
+                        {
+                            emp.workingshift = false;
+                        }
+                    }
+                    foreach (string neededRole in rolesForShifts)
+                    {
+                        if (numberOfEmployeesInRole[Roles.IndexOf(neededRole)] > 0)
+                        {
+                            Employee assignedEmployee = FindEmployeeForRole(EmployeeList, dayOfShift, neededRole);
+
+                            if (assignedEmployee != null)
+                            {
+                                assignedEmployee.hoursWorked += shiftlength;
+                                assignedEmployee.workingshift = true;
+                                numberOfEmployeesInRole[Roles.IndexOf(neededRole)]--;
+                                AddToEmployeeShiftTable(assignedEmployee.EmployeeID, neededRole, Shifts[i].shiftID);
+                            }
+                        }
+                    }
+                }
+                index++;
+            } while (ShiftDay.Count() > index);
+        }
+        static Employee FindEmployeeForRole(List<Employee> employees, DateTime day, string role)
+        {
+            double highestPriority = -1.0;
+            Employee selectedEmployee = null;
+
+            foreach (Employee emp in employees)
+            {
+                if (emp.DaysCanWork.Contains(day.DayOfWeek.ToString()) && emp.Qualifications.Contains(role.ToLower()) && emp.workingshift == false)
+                {
+                    if (emp.shiftPriority > highestPriority)
+                    {
+                        highestPriority = emp.shiftPriority;
+                        selectedEmployee = emp;
+                    }
+                }
+            }
+
+            return selectedEmployee;
+        }
         static void AddToEmployeeShiftTable(int employeeID, string role, int shiftID)
         {
             string addQuery = "INSERT INTO EmployeeShifts (EmployeeID,ShiftID,EmployeeRole) VALUES (@empID, @shiftID,@empRole)";
@@ -1084,13 +1106,34 @@ namespace NEA_Prototype
                 conn.Close();
             }
         }
-      static void AddToShiftTable(int ShiftID)
+      static void AddToShiftTable(int ShiftID, DateTime shiftDay, string shiftStart, string shiftEnd)
       {
-
+            string addQuery = "INSERT INTO Shifts (ShiftID,ShiftDay,ShiftStart,ShiftEnd) VALUES (@ShiftID,@ShiftDay,@ShiftStart,@ShiftEnd)";
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source = RotaSystemDataBase.db; Version = 3;")) 
+            {
+                conn.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(addQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@ShiftID", ShiftID);
+                    cmd.Parameters.AddWithValue("@ShiftDay", shiftDay);
+                    cmd.Parameters.AddWithValue("@ShiftStart", shiftStart);
+                    cmd.Parameters.AddWithValue("@ShiftEnd", shiftEnd);
+                    cmd.ExecuteNonQuery();
+                }
+                conn.Close();
+            }
+            
       }
-        static void ViewRota()
+        static void ViewRota(int UserIndex)
         {
+            DateTime currentWeekBeginning = FirstDayOfWeek(DateTime.Now);
+            for (int i = 0; i < 7; i++)
+            {
+                Console.WriteLine(currentWeekBeginning.AddDays(i).DayOfWeek.ToString());
+            }
 
+
+            Console.ReadKey();
         } //needs everything to do with getting data from the database done first
         static void ViewFullRota()
         {
@@ -1099,7 +1142,21 @@ namespace NEA_Prototype
         static void ShiftTrade()
         {
 
-        } //Needs shifts to be made  //PersonWantingTrade, Onetheywanttotradewith, ShiftTheyHave,ShiftTheyWant
+        } //Needs shifts to be made  PersonWantingTrade, Onetheywanttotradewith, ShiftTheyHave,ShiftTheyWant
+
+
+
+
+
+        // --------------------------------- COPIED CODE BELOW ---------------------------------
+        static DateTime FirstDayOfWeek(DateTime datetoday)
+        {
+            var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            var diff = datetoday.DayOfWeek - culture.DateTimeFormat.FirstDayOfWeek;
+            if (diff < 0)
+                diff += 7;
+            return datetoday.AddDays(-diff).Date;
+        }
     }
 
 }

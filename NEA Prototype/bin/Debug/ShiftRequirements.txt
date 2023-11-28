@@ -1,2 +1,2 @@
 08:30,20:30
-1,manager,2,bar,2,kitchen,2,waiters
+1,manager,2,bar,2,kitchen,2,waiter
